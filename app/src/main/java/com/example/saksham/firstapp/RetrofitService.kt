@@ -1,5 +1,6 @@
 package com.example.saksham.firstapp
 
+import io.reactivex.Observable
 import retrofit2.Call
 import retrofit2.http.GET
 
@@ -11,6 +12,6 @@ import retrofit2.http.GET
 interface RetrofitService {
 
     @GET("posts/")
-    fun getPosts() : Call<ArrayList<Row>>
+    fun getPosts() : Observable<ArrayList<Row>>
 
 }

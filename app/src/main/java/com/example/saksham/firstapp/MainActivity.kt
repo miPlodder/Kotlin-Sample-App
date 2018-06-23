@@ -3,13 +3,13 @@ package com.example.saksham.firstapp
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,21 +25,30 @@ class MainActivity : AppCompatActivity() {
 
         var retrofitService : Retrofit = Retrofit.Builder()
                 .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
 
         var service : RetrofitService = retrofitService.create(RetrofitService::class.java)
 
-        service.getPosts().enqueue(object : Callback<ArrayList<Row>> {
-            override fun onFailure(call: Call<ArrayList<Row>>?, t: Throwable?) {
+        service.getPosts()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(object : DisposableObserver<ArrayList<Row>>() {
 
-            }
+                    override fun onComplete() {
 
-            override fun onResponse(call: Call<ArrayList<Row>>?, response: Response<ArrayList<Row>>?) {
-                mainAdapter!!.list = response!!.body()
-                mainAdapter!!.notifyDataSetChanged()
-            }
-        })
+                    }
+
+                    override fun onNext(t: ArrayList<Row>) {
+                        mainAdapter!!.list = t
+                        mainAdapter!!.notifyDataSetChanged()
+                    }
+
+                    override fun onError(e: Throwable) {
+
+                    }
+                })
     }
 }
